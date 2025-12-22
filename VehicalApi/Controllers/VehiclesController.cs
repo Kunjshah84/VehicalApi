@@ -5,7 +5,7 @@ using VehicalApi.Data;
 using VehicalApi.Exceptions;
 
 [ApiController]
-[Route("api/vehicles")]
+[Route("api/[controller]")]
 [Authorize]
 public class VehiclesController : ControllerBase
 {
@@ -19,6 +19,7 @@ public class VehiclesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetDashboardVehicles()
     {
+        // Console.WriteLine("hited the req");
         var vehicles = await _context.Vehicles
             .Include(v => v.VehicleImages)
             .AsNoTracking()

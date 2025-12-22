@@ -31,7 +31,7 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
-        Console.WriteLine("Register DTO Received:");
+        // Console.WriteLine("Register DTO Received:");
         var email = dto.Email.Trim().ToLower();
         if (await _db.Users.AnyAsync(u => u.Email.ToLower() == email))
             // return BadRequest(new { message = "Email is already registered." });
@@ -91,16 +91,15 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
     {
-        var user = await _db.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
+        var email = dto.Email.Trim().ToLower();
+        var user = await _db.Users.SingleOrDefaultAsync(u => u.Email == email);
         if (user == null)  throw new UnauthorizedException("Please Register First");
 
         var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
         if (result == PasswordVerificationResult.Failed)  
             throw new UnauthorizedException("Wrong Password");
         
-        string accessToken;
-
-        accessToken = _tokenService.CreateAccessToken(user);
+        string accessToken = _tokenService.CreateAccessToken(user);
         // try
         // {
         //     accessToken = _tokenService.CreateAccessToken(user);
@@ -129,7 +128,18 @@ public class AuthController : ControllerBase
         await _db.SaveChangesAsync();
         SetRefreshTokenCookie(refreshToken, expiry);
 
-        return Ok(new { token = accessToken });
+        return Ok(new
+        {
+            token = accessToken,
+            user = new
+            {
+                userId = user.UserId,
+                fullName = user.FullName,
+                email = user.Email,
+                number = user.Number,
+                role = user.Role
+            }
+        });
     }
 
     [HttpPost("refresh")]
@@ -224,10 +234,12 @@ public class AuthController : ControllerBase
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Path = "/api/auth/refresh",
-                Expires = expiry.UtcDateTime
+                Secure = false,
+                // SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
+                // Path = "/api/auth/refresh",
+                Path = "/",
+                Expires = expiry.UtcDateTime,
             }
         );
     }
