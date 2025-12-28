@@ -4,16 +4,42 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using VehicalApi.Data;
+using VehicalApi.Domain.Auth.Interfaces;
+using VehicalApi.Infrastructure.Repositories;
+using VehicalApi.Domain.Auth.Services;
+using VehicalApi.Business.Auth.Interfaces;
+using VehicalApi.Business.Auth.Services;
+using VehicalApi.Services.Interfaces;
+using VehicalApi.Services.Implementations;
+using VehicalApi.Domain.Vehicles.Interfaces;
+using VehicalApi.Domain.Vehicles.Services;
+using VehicalApi.Business.Vehicles.Interfaces;
+using VehicalApi.Business.Vehicles.Services;
+using VehicalApi.Domain.Manager.Interfaces;
+using VehicalApi.Domain.Manager.Services;
+using VehicalApi.Business.Manager.Interfaces;
+using VehicalApi.Business.Manager.Services;
 
-
-
-// PasswordHashGenerator.Run(); //--->Just to generate password hash for the manager
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthDomainService, AuthDomainService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IVehicleDomainService, VehicleDomainService>();
+builder.Services.AddScoped<IVehicleQueryService, VehicleQueryService>();
+builder.Services.AddScoped<IManagerRepository, ManagerRepository>();
+builder.Services.AddScoped<IManagerDomainService, ManagerDomainService>();
+builder.Services.AddScoped<IManagerService, ManagerService>();
+
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
@@ -57,7 +83,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var app = builder.Build();
 
 // app.UseHttpsRedirection();
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsProduction() || app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
