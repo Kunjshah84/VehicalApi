@@ -37,5 +37,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
           source: "publish/*"
-          target: ${{ secrets.FTP_TARGET }}
+          target: "wwwroot"
           strip_components: 1
