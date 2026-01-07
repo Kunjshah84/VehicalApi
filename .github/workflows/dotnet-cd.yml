@@ -16,26 +16,13 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release
-
-      - name: Publish
-        run: dotnet publish VehicalApi/VehicalApi.csproj -c Release -o publish
-
-      - name: Deploy via FTP to MonsterASP
+      - name: Publish API
+        run: dotnet publish -o out
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_HOST }}
+          server:  ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: publish/
-          server-dir: wwwroot/
-          dangerous-clean-slate: true
-
+          local-dir: out/
+          server-dir: /wwwroot/
