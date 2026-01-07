@@ -20,7 +20,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Business\Booking\" />
+    <Folder Include="Business\Booking\Interfaces\" />
+    <Folder Include="Business\Booking\Services\" />
     <Folder Include="Controllers\" />
+    <Folder Include="Domian\Booking\" />
+    <Folder Include="Domian\Booking\Interfaces\" />
+    <Folder Include="Domian\Booking\Services\" />
+    <Folder Include="Dtos\Booking\" />
+    <Folder Include="Dtos\Manager\" />
     <Folder Include="Dto\" />
     <Folder Include="Dto\VehicleImage\" />
     <Folder Include="Dto\VehicleSpecification\" />

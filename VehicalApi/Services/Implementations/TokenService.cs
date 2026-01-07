@@ -20,6 +20,7 @@ namespace VehicalApi.Services.Implementations
 
         public string CreateAccessToken(User user)
         {
+            Console.WriteLine("The token is created for the user");
             var jwt = _config.GetSection("Jwt");
 
             var claims = new List<Claim>

@@ -9,5 +9,6 @@ namespace VehicalApi.Business.Auth.Interfaces
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
         Task<AuthResponseDto> RefreshAsync(string refreshToken);
         Task LogoutAsync(LogoutDto dto);
+        Task<UserDto> GetCurrentUserAsync();
     }
 }

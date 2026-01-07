@@ -19,7 +19,7 @@ using VehicalApi.Domain.Manager.Interfaces;
 using VehicalApi.Domain.Manager.Services;
 using VehicalApi.Business.Manager.Interfaces;
 using VehicalApi.Business.Manager.Services;
-
+using VehicalApi.Services.BookingServiecs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +37,8 @@ builder.Services.AddScoped<IVehicleQueryService, VehicleQueryService>();
 builder.Services.AddScoped<IManagerRepository, ManagerRepository>();
 builder.Services.AddScoped<IManagerDomainService, ManagerDomainService>();
 builder.Services.AddScoped<IManagerService, ManagerService>();
-
+builder.Services.AddScoped<RideBookingService>();
+builder.Services.AddHttpContextAccessor();
 
 
 builder.Services.AddCors(options =>
@@ -46,7 +47,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:4200" , "http://localhost:5001")
+                .WithOrigins("http://localhost:4200" , "http://localhost:5001" , "http://vehiclewebcomp.lovestoblog.com")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -82,6 +83,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+    db.Database.Migrate();
+}
+
+
 // app.UseHttpsRedirection();
 if (app.Environment.IsProduction() || app.Environment.IsDevelopment())
 {
@@ -99,3 +108,7 @@ app.UseAuthorization();
 app.MapGet("/", () => "Hello World!");
 app.MapControllers();
 app.Run();
+
+
+    //   "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=VehicleShowroom;Trusted_Connection=True;TrustServerCertificate=True;"
+//   "DefaultConnection": "Server=db37270.public.databaseasp.net; Database=db37270; User Id=db37270; Password=4f_C+Hc9N6=h; Encrypt=True; TrustServerCertificate=True;"

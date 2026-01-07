@@ -16,7 +16,6 @@ public class AuthController : ControllerBase
     }
 
 
-    // For testing poroposr
     [HttpGet("ping")]
     public IActionResult Ping()
     {
@@ -96,10 +95,21 @@ public class AuthController : ControllerBase
             {
                 HttpOnly = true,
                 Secure = false, 
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = expiry.UtcDateTime
             }
         );
+    }
+
+    [HttpGet("me")]
+    public async Task<IActionResult> Me()
+    {
+        var user = await _authService.GetCurrentUserAsync();
+
+        return Ok(new
+        {
+            user
+        });
     }
 }

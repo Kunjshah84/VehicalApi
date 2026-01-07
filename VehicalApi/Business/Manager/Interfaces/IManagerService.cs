@@ -1,3 +1,5 @@
+using VehicalApi.Controllers;
+using VehicalApi.Dtos.Manager;
 using VehicalApi.Dtos.Vehicle;
 using VehicalApi.Dtos.VehicleImage;
 using VehicalApi.Dtos.VehicleSpecification;
@@ -7,9 +9,19 @@ namespace VehicalApi.Business.Manager.Interfaces
 {
     public interface IManagerService
     {
-        Task<Vehicle> CreateVehicleAsync(CreateVehicleDto dto);
+        Task<int> CreateVehicleWithSpecificationAsync(
+            int managerUserId,
+            CreateVehicleWithSpecDto dto);
+
         Task<Vehicle> GetVehicleByIdAsync(int id);
-        Task AddVehicleSpecificationAsync(int vehicleId, CreateVehicleSpecificationDto dto);
-        Task AddVehicleImageAsync(int vehicleId, CreateVehicleImageDto dto);
+        Task<List<ManagerVehicleDto>> GetVehiclesByManagerAsync(int managerUserId);
+
+        Task<int> DeleteVehicleAsync(int managerUserId, int vehicleId);
+
+        Task<string> UpdateVehicleAsync(int managerUserId, int vehicleId, UpdateVehicleWithSpecDto dto);
+
+        Task AddVehicleImageAsync(int managerUserId, int vehicleId, List<SaveVehicleImageDto> images);
+
+        Task<List<VehicleImageResponseDto>> GetVehicleImagesAsync(int vehicleId);
     }
 }

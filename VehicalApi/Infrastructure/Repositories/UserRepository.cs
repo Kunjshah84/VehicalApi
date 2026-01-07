@@ -16,6 +16,7 @@ namespace VehicalApi.Infrastructure.Repositories
 
         public async Task<bool> ExistsByEmailAsync(string email)
         {
+            Console.WriteLine("Insidet the email finding");
             return await _db.Users.AnyAsync(u => u.Email.ToLower() == email);
         }
 
@@ -42,6 +43,13 @@ namespace VehicalApi.Infrastructure.Repositories
         public async Task SaveAsync()
         {
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<User?> GetByIdAsync(int userId)
+        {
+            return await _db.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(u => u.UserId == userId);
         }
     }
 }

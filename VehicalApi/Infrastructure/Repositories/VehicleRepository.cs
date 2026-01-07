@@ -81,7 +81,10 @@ namespace VehicalApi.Infrastructure.Repositories
                     VehicleName = v.VehicleName,
                     Model = v.Model,
                     YearOfProduction = v.YearOfProduction,
+                    
+                    AgeInShowroom = v.AgeInShowroom, 
                     BasePrice = v.BasePrice,
+                    
                     StockCount = v.StockCount,
                     ShortDescription = v.ShortDescription,
 
@@ -113,7 +116,6 @@ namespace VehicalApi.Infrastructure.Repositories
                 throw new NotFoundException("Vehicle not found");
 
             return vehicle;
-}
-
+        }
     }
 }

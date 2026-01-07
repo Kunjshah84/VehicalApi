@@ -3,6 +3,7 @@ using VehicalApi.DTOs;
 using VehicalApi.DTOs.Auth;
 using VehicalApi.Entity;
 using VehicalApi.Exceptions;
+using VehicalApi.Infrastructure.Repositories;
 using VehicalApi.Services.Interfaces;
 
 namespace VehicalApi.Domain.Auth.Services
@@ -54,10 +55,13 @@ namespace VehicalApi.Domain.Auth.Services
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
+            Console.WriteLine("HIT THE DOMAIN SERVICE");
             var email = dto.Email.Trim().ToLower();
 
             var user = await _userRepo.GetByEmailAsync(email)
                 ?? throw new UnauthorizedException("Please Register First");
+
+            Console.WriteLine("After email exist");
 
             if (!_passwordHashService.VerifyPassword(
                 user, user.PasswordHash, dto.Password))
@@ -68,6 +72,7 @@ namespace VehicalApi.Domain.Auth.Services
             user.RefreshTokenExpiry = expiry.UtcDateTime;
 
             await _userRepo.SaveAsync();
+            Console.WriteLine("The user is loged in");
 
             return BuildResponse(user, refreshToken, expiry);
         }
@@ -115,6 +120,22 @@ namespace VehicalApi.Domain.Auth.Services
                     Number = user.Number,
                     Role = user.Role
                 }
+            };
+        }
+
+        public async Task<UserDto> GetUserByIdAsync(int userId)
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+                throw new NotFoundException("User not found");
+
+            return new UserDto
+            {
+                UserId = user.UserId,
+                FullName = user.FullName,
+                Email = user.Email,
+                Role = user.Role
             };
         }
     }

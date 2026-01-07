@@ -9,5 +9,8 @@ namespace VehicalApi.Domain.Auth.Interfaces
         Task<User?> GetByRefreshTokenAsync(string refreshToken);
         Task AddAsync(User user);
         Task SaveAsync();
+
+        Task<User?> GetByIdAsync(int userId);
+
     }
 }

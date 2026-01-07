@@ -26,6 +26,8 @@ public class VehiclesController : ControllerBase
         [FromQuery] string? sortBy
     )
     {
+        Console.WriteLine($"IsAuthenticated: {User.Identity?.IsAuthenticated}");
+
         var vehicles = await _vehicleQueryService.GetDashboardVehiclesAsync(
             search,
             minPrice,

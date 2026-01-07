@@ -1,169 +1,361 @@
-using Moq;
 using Xunit;
+using Moq;
 using VehicalApi.Domain.Manager.Services;
 using VehicalApi.Domain.Manager.Interfaces;
-using VehicalApi.Dtos.Vehicle;
-using VehicalApi.Dtos.VehicleImage;
-using VehicalApi.Dtos.VehicleSpecification;
 using VehicalApi.Entity;
 using VehicalApi.Exceptions;
+using VehicalApi.Dtos.Manager;
+using VehicalApi.Dtos.Vehicle;
+using VehicalApi.Entity;
+using VehicalApi.Dtos.VehicleSpecification;
 
-namespace VehicalApi.Tests.Domain.Manager
+namespace VehicalApi.Tests.Domain.Auth
 {
     public class ManagerDomainServiceTests
     {
         private readonly Mock<IManagerRepository> _repositoryMock;
-        private readonly ManagerDomainService _sut;
+        private readonly ManagerDomainService _service;
 
         public ManagerDomainServiceTests()
         {
             _repositoryMock = new Mock<IManagerRepository>();
-            _sut = new ManagerDomainService(_repositoryMock.Object);
+            _service = new ManagerDomainService(_repositoryMock.Object);
         }
 
         [Fact]
-        public async Task CreateVehicleAsync_WhenShowroomNotFound_ShouldThrowNotFoundException()
+        public async Task GetVehicleByIdAsync_WhenVehicleExists_ReturnsVehicle()
         {
-            var dto = new CreateVehicleDto { ShowroomId = 1 };
+            var vehicleId = 1;
+            var vehicle = new Vehicle
+            {
+                VehicalId = vehicleId
+            };
 
             _repositoryMock
-                .Setup(r => r.ShowroomExistsAsync(dto.ShowroomId))
-                .ReturnsAsync(false);
-
-            await Assert.ThrowsAsync<NotFoundException>(
-                () => _sut.CreateVehicleAsync(dto)
-            );
-        }
-
-        [Fact]
-        public async Task CreateVehicleAsync_WhenValid_ShouldCreateVehicle()
-        {
-            var dto = new CreateVehicleDto { ShowroomId = 1 };
-            var vehicle = new Vehicle();
-
-            _repositoryMock
-                .Setup(r => r.ShowroomExistsAsync(dto.ShowroomId))
-                .ReturnsAsync(true);
-
-            _repositoryMock
-                .Setup(r => r.CreateVehicleAsync(dto))
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
                 .ReturnsAsync(vehicle);
 
-            var result = await _sut.CreateVehicleAsync(dto);
+            var result = await _service.GetVehicleByIdAsync(vehicleId);
 
-            Assert.Equal(vehicle, result);
-
-            _repositoryMock.Verify(r => r.CreateVehicleAsync(dto), Times.Once);
+            Assert.NotNull(result);
+            Assert.Equal(vehicleId, result.VehicalId);
         }
 
         [Fact]
-        public async Task GetVehicleByIdAsync_WhenVehicleNotFound_ShouldThrowNotFoundException()
+        public async Task GetVehicleByIdAsync_WhenVehicleNotFound_ThrowsNotFoundException()
         {
+            var vehicleId = 99;
+
             _repositoryMock
-                .Setup(r => r.GetVehicleByIdAsync(1))
-                .ReturnsAsync((Vehicle?)null);
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
+                .ReturnsAsync((Vehicle)null);
 
             await Assert.ThrowsAsync<NotFoundException>(
-                () => _sut.GetVehicleByIdAsync(1)
+                () => _service.GetVehicleByIdAsync(vehicleId)
             );
         }
-
         [Fact]
-        public async Task GetVehicleByIdAsync_WhenVehicleExists_ShouldReturnVehicle()
+        public async Task CreateVehicleWithSpecificationAsync_WhenValidManager_CreatesVehicleAndReturnsId()
         {
-            var vehicle = new Vehicle();
+            var managerUserId = 10;
+            var showroomId = 5;
+            var createdVehicleId = 100;
+
+            var dto = new CreateVehicleWithSpecDto
+            {
+                VehicleName = "Test Vehicle",
+                Model = "X1",
+                YearOfProduction = 2024,
+                BasePrice = 500000,
+                StockCount = 3,
+                ShortDescription = "Test desc",
+                Specification = new CreateVehicleSpecificationDto
+                {
+                    Engine = 12,
+                    PowerOfVehical = "200HP",
+                    Torque = "300Nm",
+                    FuelType = "Petrol",
+                    Mileage = "15",
+                    BodyType = "SUV",
+                    SeatingCapacity = 5
+                }
+            };
 
             _repositoryMock
-                .Setup(r => r.GetVehicleByIdAsync(1))
-                .ReturnsAsync(vehicle);
-
-            var result = await _sut.GetVehicleByIdAsync(1);
-
-            Assert.Equal(vehicle, result);
-        }
-
-        [Fact]
-        public async Task AddVehicleSpecificationAsync_WhenVehicleNotFound_ShouldThrowNotFoundException()
-        {
-            var dto = new CreateVehicleSpecificationDto();
+            .Setup(r => r.GetShowroomIdByManagerAsync(managerUserId))
+            .ReturnsAsync(showroomId);
 
             _repositoryMock
-                .Setup(r => r.VehicleExistsAsync(1))
-                .ReturnsAsync(false);
-
-            await Assert.ThrowsAsync<NotFoundException>(
-                () => _sut.AddVehicleSpecificationAsync(1, dto)
-            );
-        }
-
-        [Fact]
-        public async Task AddVehicleSpecificationAsync_WhenSpecificationAlreadyExists_ShouldThrowBadRequestException()
-        {
-            var dto = new CreateVehicleSpecificationDto();
+            .Setup(r => r.CreateVehicleAsync(It.IsAny<CreateVehicleDto>()))
+            .ReturnsAsync(new Vehicle
+            {
+                VehicalId = createdVehicleId
+            });
 
             _repositoryMock
-                .Setup(r => r.VehicleExistsAsync(1))
-                .ReturnsAsync(true);
+            .Setup(r => r.AddVehicleSpecificationAsync(
+                createdVehicleId,
+                It.IsAny<CreateVehicleSpecificationDto>()
+            ))
+            .Returns(Task.CompletedTask);
 
-            _repositoryMock
-                .Setup(r => r.VehicleSpecificationExistsAsync(1))
-                .ReturnsAsync(true);
+            var result = await _service.CreateVehicleWithSpecificationAsync(managerUserId, dto);
+            Assert.Equal(createdVehicleId, result);
 
-            await Assert.ThrowsAsync<BadRequestException>(
-                () => _sut.AddVehicleSpecificationAsync(1, dto)
-            );
-        }
-
-        [Fact]
-        public async Task AddVehicleSpecificationAsync_WhenValid_ShouldAddSpecification()
-        {
-            var dto = new CreateVehicleSpecificationDto();
-
-            _repositoryMock
-                .Setup(r => r.VehicleExistsAsync(1))
-                .ReturnsAsync(true);
-
-            _repositoryMock
-                .Setup(r => r.VehicleSpecificationExistsAsync(1))
-                .ReturnsAsync(false);
-
-            await _sut.AddVehicleSpecificationAsync(1, dto);
 
             _repositoryMock.Verify(
-                r => r.AddVehicleSpecificationAsync(1, dto),
+                r => r.GetShowroomIdByManagerAsync(managerUserId),
+                Times.Once
+            );
+
+            _repositoryMock.Verify(
+                r => r.CreateVehicleAsync(It.IsAny<CreateVehicleDto>()),
+                Times.Once
+            );
+
+            _repositoryMock.Verify(
+                r => r.AddVehicleSpecificationAsync(
+                    createdVehicleId,
+                    It.IsAny<CreateVehicleSpecificationDto>()
+                ),
+                Times.Once
+            );
+        }
+
+
+        [Fact]
+        public async Task CreateVehicleWithSpecificationAsync_WhenShowroomNotFound_ThrowsNotFoundException()
+        {
+            var managerUserId = 10;
+            var dto = new CreateVehicleWithSpecDto();
+
+            _repositoryMock
+                .Setup(r => r.GetShowroomIdByManagerAsync(managerUserId))
+                .ReturnsAsync((int?)null);
+
+            await Assert.ThrowsAsync<NotFoundException>(() =>
+                _service.CreateVehicleWithSpecificationAsync(managerUserId, dto)
+            );
+        }
+
+
+        [Fact]
+        public async Task DeleteVehicleAsync_WhenAuthorized_DeletesVehicle()
+        {
+            var managerUserId = 10;
+            var showroomId = 5;
+            var vehicleId = 20;
+
+            var vehicle = new Vehicle
+            {
+                VehicalId = vehicleId,
+                ShowroomId = showroomId
+            };
+
+            _repositoryMock
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
+                .ReturnsAsync(vehicle);
+
+            _repositoryMock
+                .Setup(r => r.GetShowroomIdByManagerAsync(managerUserId))
+                .ReturnsAsync(showroomId);
+
+            _repositoryMock
+                .Setup(r => r.DeleteVehicleAsync(vehicle))
+                .Returns(Task.CompletedTask);
+
+            var result = await _service.DeleteVehicleAsync(managerUserId, vehicleId);
+
+            Assert.Equal(vehicleId, result);
+
+            _repositoryMock.Verify(
+                r => r.DeleteVehicleAsync(vehicle),
                 Times.Once
             );
         }
 
         [Fact]
-        public async Task AddVehicleImageAsync_WhenVehicleNotFound_ShouldThrowNotFoundException()
+        public async Task DeleteVehicleAsync_WhenUnauthorized_ThrowsUnauthorizedException()
         {
-            var dto = new CreateVehicleImageDto();
+            var managerUserId = 10;
+            var vehicleId = 20;
+
+            var vehicle = new Vehicle
+            {
+                VehicalId = vehicleId,
+                ShowroomId = 99
+            };
 
             _repositoryMock
-                .Setup(r => r.VehicleExistsAsync(1))
-                .ReturnsAsync(false);
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
+                .ReturnsAsync(vehicle);
 
-            await Assert.ThrowsAsync<NotFoundException>(
-                () => _sut.AddVehicleImageAsync(1, dto)
+            _repositoryMock
+                .Setup(r => r.GetShowroomIdByManagerAsync(managerUserId))
+                .ReturnsAsync(5);
+
+            await Assert.ThrowsAsync<UnauthorizedException>(() =>
+                _service.DeleteVehicleAsync(managerUserId, vehicleId)
             );
         }
 
         [Fact]
-        public async Task AddVehicleImageAsync_WhenValid_ShouldAddImage()
+        public async Task DeleteVehicleAsync_ShouldThrowNotFoundException_WhenVehicleDoesNotExist()
         {
-            var dto = new CreateVehicleImageDto();
+            // Arrange
+            var managerUserId = 10;
+            var vehicleId = 99;
 
             _repositoryMock
-                .Setup(r => r.VehicleExistsAsync(1))
-                .ReturnsAsync(true);
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
+                .ReturnsAsync((Vehicle)null);
 
-            await _sut.AddVehicleImageAsync(1, dto);
+            // Act
+            var action = async () =>
+                await _service.DeleteVehicleAsync(managerUserId, vehicleId);
+
+            // Assert
+            await Assert.ThrowsAsync<NotFoundException>(action);
 
             _repositoryMock.Verify(
-                r => r.AddVehicleImageAsync(1, dto),
+                r => r.DeleteVehicleAsync(It.IsAny<Vehicle>()),
+                Times.Never
+            );
+        }
+
+        [Fact]
+        public async Task UpdateVehicleAsync_WhenValidManagerAndSpecExists_UpdatesVehicle()
+        {
+            // Arrange
+            var managerUserId = 10;
+            var showroomId = 5;
+            var vehicleId = 20;
+
+            var vehicle = new Vehicle
+            {
+                VehicalId = vehicleId,
+                ShowroomId = showroomId,
+                VehicleSpecifications = new List<VehicleSpecification>
+                {
+                    new VehicleSpecification()
+                }
+            };
+
+            var dto = new UpdateVehicleWithSpecDto
+            {
+                VehicleName = "Updated Name",
+                Model = "Updated Model",
+                YearOfProduction = 2025,
+                BasePrice = 700000,
+                StockCount = 4,
+                ShortDescription = "Updated Desc",
+                Engine = 1200,
+                PowerOfVehical = "250HP",
+                Torque = "350Nm",
+                FuelType = "Diesel",
+                Mileage = "18",
+                BodyType = "Sedan",
+                SeatingCapacity = 5
+            };
+
+            _repositoryMock
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
+                .ReturnsAsync(vehicle);
+
+            _repositoryMock
+                .Setup(r => r.GetShowroomIdByManagerAsync(managerUserId))
+                .ReturnsAsync(showroomId);
+
+            _repositoryMock
+                .Setup(r => r.UpdateVehicleAsync(vehicle))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _service.UpdateVehicleAsync(
+                managerUserId,
+                vehicleId,
+                dto
+            );
+
+            // Assert
+            Assert.Equal("Vehicle Edited with vehicle Id", result);
+
+            Assert.Equal(dto.VehicleName, vehicle.VehicleName);
+            Assert.Equal(dto.Model, vehicle.Model);
+            Assert.Equal(dto.BasePrice, vehicle.BasePrice);
+            Assert.Equal(dto.StockCount, vehicle.StockCount);
+
+            var spec = vehicle.VehicleSpecifications.First();
+            Assert.Equal(dto.Engine, spec.Engine);
+            Assert.Equal(dto.PowerOfVehical, spec.PowerOfvehical);
+            Assert.Equal(dto.FuelType, spec.FuleType);
+
+            _repositoryMock.Verify(
+                r => r.UpdateVehicleAsync(vehicle),
                 Times.Once
             );
         }
+
+        [Fact]
+        public async Task UpdateVehicleAsync_WhenManagerNotOwner_ThrowsUnauthorizedAccessException()
+        {
+            var managerUserId = 10;
+            var vehicleId = 20;
+
+            var vehicle = new Vehicle
+            {
+                VehicalId = vehicleId,
+                ShowroomId = 99
+            };
+
+            _repositoryMock
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
+                .ReturnsAsync(vehicle);
+
+            _repositoryMock
+                .Setup(r => r.GetShowroomIdByManagerAsync(managerUserId))
+                .ReturnsAsync(5);
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+                _service.UpdateVehicleAsync(
+                    managerUserId,
+                    vehicleId,
+                    new UpdateVehicleWithSpecDto()
+                )
+            );
+        }
+
+
+        [Fact]
+        public async Task UpdateVehicleAsync_WhenSpecificationMissing_ThrowsNotFoundException()
+        {
+            var managerUserId = 10;
+            var showroomId = 5;
+            var vehicleId = 20;
+
+            var vehicle = new Vehicle
+            {
+                VehicalId = vehicleId,
+                ShowroomId = showroomId,
+                VehicleSpecifications = new List<VehicleSpecification>()
+            };
+
+            _repositoryMock
+                .Setup(r => r.GetVehicleByIdAsync(vehicleId))
+                .ReturnsAsync(vehicle);
+
+            _repositoryMock
+                .Setup(r => r.GetShowroomIdByManagerAsync(managerUserId))
+                .ReturnsAsync(showroomId);
+
+            await Assert.ThrowsAsync<NotFoundException>(() =>
+                _service.UpdateVehicleAsync(
+                    managerUserId,
+                    vehicleId,
+                    new UpdateVehicleWithSpecDto()
+                )
+            );
+        }
+
     }
 }
