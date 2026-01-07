@@ -29,8 +29,8 @@ jobs:
       - name: Publish
         run: dotnet publish VehicalApi/VehicalApi.csproj -c Release -o publish
 
-      - name: Deploy via SFTP to MonsterASP
-        uses: appleboy/scp-action@v0.1.7
+      - name: Deploy via FTP to MonsterASP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           host: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -38,4 +38,3 @@ jobs:
           port: 22
           source: "publish/*"
           target: "wwwroot"
-          strip_components: 1
