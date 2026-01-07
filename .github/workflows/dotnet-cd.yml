@@ -32,9 +32,8 @@ jobs:
       - name: Deploy via FTP to MonsterASP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          host: ${{ secrets.FTP_HOST }}
+          server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: 22
-          source: "publish/*"
-          target: "wwwroot"
+          local-dir: publish/
+          server-dir: wwwroot/
