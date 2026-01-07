@@ -15,6 +15,6 @@ namespace VehicalApi.Business.Vehicles.Interfaces
             string? sortBy
         );
 
-        Task<object> GetVehicleDetailsAsync(int id);
+        Task<VehicleDetailsDto> GetVehicleDetailsAsync(int id);
     }
 }

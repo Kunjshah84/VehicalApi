@@ -70,48 +70,50 @@ namespace VehicalApi.Infrastructure.Repositories
             return vehicles;
         }
 
-        public async Task<object> GetVehicleDetailsAsync(int id)
+        public async Task<VehicleDetailsDto> GetVehicleDetailsAsync(int id)
         {
             var vehicle = await _context.Vehicles
-                .Include(v => v.VehicleImages)
-                .Include(v => v.VehicleSpecifications)
                 .AsNoTracking()
                 .Where(v => v.VehicalId == id)
-                .Select(v => new
+                .Select(v => new VehicleDetailsDto
                 {
-                    v.VehicalId,
-                    v.VehicleName,
-                    v.Model,
-                    v.YearOfProduction,
-                    v.BasePrice,
-                    v.StockCount,
-                    v.ShortDescription,
+                    VehicalId = v.VehicalId,
+                    VehicleName = v.VehicleName,
+                    Model = v.Model,
+                    YearOfProduction = v.YearOfProduction,
+                    BasePrice = v.BasePrice,
+                    StockCount = v.StockCount,
+                    ShortDescription = v.ShortDescription,
 
                     Images = v.VehicleImages
                         .OrderBy(i => i.SortOrder)
-                        .Select(i => new
+                        .Select(i => new VehicleImageDto
                         {
-                            i.ImageLocation,
-                            i.SortOrder
-                        }),
+                            ImageLocation = i.ImageLocation,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList(),
 
-                    Specifications = v.VehicleSpecifications.Select(s => new
-                    {
-                        s.Engine,
-                        s.PowerOfvehical,
-                        s.Torque,
-                        s.FuleType,
-                        s.Mileage,
-                        s.BodyType,
-                        s.SeatingCapacity
-                    })
+                    Specifications = v.VehicleSpecifications
+                        .Select(s => new VehicleSpecificationDto
+                        {
+                            Engine = s.Engine,
+                            PowerOfvehical = s.PowerOfvehical,
+                            Torque = s.Torque,
+                            FuleType = s.FuleType,
+                            Mileage = s.Mileage,
+                            BodyType = s.BodyType,
+                            SeatingCapacity = s.SeatingCapacity
+                        })
+                        .ToList()
                 })
                 .FirstOrDefaultAsync();
 
             if (vehicle == null)
-                throw new NotFoundException("not found");
+                throw new NotFoundException("Vehicle not found");
 
             return vehicle;
-        }
+}
+
     }
 }

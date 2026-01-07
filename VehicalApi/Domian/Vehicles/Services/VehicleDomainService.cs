@@ -35,9 +35,9 @@ namespace VehicalApi.Domain.Vehicles.Services
             );
         }
 
-        public Task<object> GetVehicleDetailsAsync(int id)
+        public async Task<VehicleDetailsDto> GetVehicleDetailsAsync(int id)
         {
-            return _repository.GetVehicleDetailsAsync(id);
+            return await _repository.GetVehicleDetailsAsync(id);
         }
     }
 }
