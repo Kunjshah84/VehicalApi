@@ -16,7 +16,7 @@ public class AuthController : ControllerBase
     }
 
 
-    [HttpGet("ping")]
+    [HttpGet("pong")]
     public IActionResult Ping()
     {
         return Ok("AUTH CONTROLLER HIT");
