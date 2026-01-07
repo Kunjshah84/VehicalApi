@@ -94,7 +94,7 @@ public class AuthController : ControllerBase
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false, 
+                Secure = false,
                 SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = expiry.UtcDateTime
